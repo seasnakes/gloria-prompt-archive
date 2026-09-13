@@ -23,10 +23,10 @@ def run_cli(args):
     env = os.environ.copy()
     for name in ['NO_PROXY', 'no_proxy']:
         env[name] = ','.join(dict.fromkeys((env.get(name, '') + ',127.0.0.1,localhost,::1').strip(',').split(',')))
-    result = subprocess.run(['lark-cli', 'base', *args, '--as', 'user'], capture_output=True, text=True, env=env)
+    result = subprocess.run(['lark-cli', 'base', *args, '--as', 'user'], capture_output=True, text=True, env=env, cwd=ROOT)
     if result.returncode:
         # Do not print raw transport output, which may include signed URLs.
-        raise RuntimeError('飞书读取失败，请在本机检查 lark-cli 的用户登录与表格读取权限。')
+        raise RuntimeError('飞书读取失败，未更新发布快照；请检查本机 lark-cli 参数、用户登录与表格读取权限。')
     try:
         value = json.loads(result.stdout)
     except ValueError as error:
@@ -72,7 +72,7 @@ def main():
     PRIVATE.mkdir(exist_ok=True)
     records_file = PRIVATE / 'records.ndjson'
     if not args.existing_export:
-        cli_args = ['+record-list', '--base-token', BASE, '--table-id', TABLE, '--format', 'ndjson', '--output', str(records_file), '--overwrite']
+        cli_args = ['+record-list', '--base-token', BASE, '--table-id', TABLE, '--format', 'ndjson', '--output', str(records_file.relative_to(ROOT)), '--overwrite']
         for field in FIELDS:
             cli_args += ['--field-id', field]
         run_cli(cli_args)
@@ -112,7 +112,7 @@ def main():
         if file is None:
             suffix = Path(info['name']).suffix.lower()
             file = temp_dir / (hashlib.sha256(token.encode()).hexdigest() + suffix)
-            run_cli(['+record-download-attachment', '--base-token', BASE, '--table-id', TABLE, '--record-id', record_id, '--file-token', token, '--output', str(file), '--overwrite'])
+            run_cli(['+record-download-attachment', '--base-token', BASE, '--table-id', TABLE, '--record-id', record_id, '--file-token', token, '--output', str(file.relative_to(ROOT)), '--overwrite'])
         if not file.is_file() or file.stat().st_size != size:
             raise RuntimeError('附件大小校验失败，保留上次发布数据。')
         digest = hashlib.sha256(file.read_bytes()).hexdigest()

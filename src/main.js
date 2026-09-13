@@ -1,6 +1,7 @@
 import './style.css';
 import { startIntro } from './intro.js';
 import { escapeHTML as esc, filterItems, summaryFor, safeURL } from './catalog.js';
+import { version } from '../package.json';
 
 const $ = selector => document.querySelector(selector);
 const base = import.meta.env.BASE_URL;
@@ -18,7 +19,7 @@ setTheme(storage.get('gloria-theme') === 'light' ? 'light' : 'dark');
 $('#theme-toggle').addEventListener('click', () => { const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; setTheme(theme); storage.set('gloria-theme', theme); });
 startIntro();
 import('./background.js').then(({ startBackground }) => startBackground()).catch(() => { $('.ocean-background').dataset.state = 'fallback'; });
-$('#site-version').textContent = 'V1.0.0';
+$('#site-version').textContent = `V${version}`;
 
 function updateFavoriteButtons() {
   const count = items.filter(item => favorites.has(item.id)).length;

@@ -1,6 +1,6 @@
 {
   "name": "gloria-prompt-archive",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,6 +11,11 @@
     "sync": "python3 scripts/sync_feishu.py",
     "publish": "python3 scripts/publish.py"
   },
-  "dependencies": { "three": "0.180.0", "typed.js": "2.0.12" },
-  "devDependencies": { "vite": "7.1.4" }
+  "dependencies": {
+    "three": "0.180.0",
+    "typed.js": "2.0.12"
+  },
+  "devDependencies": {
+    "vite": "7.1.4"
+  }
 }
