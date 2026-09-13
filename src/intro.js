@@ -1,0 +1,47 @@
+import Typed from 'typed.js';
+import triangle from './assets/seasnake-logo-triangle.svg?raw';
+
+export function startIntro() {
+  document.querySelectorAll('[data-logo]').forEach(el => {
+    const suffix = el.dataset.logo;
+    el.innerHTML = triangle.replaceAll('seasnake-logo-triangle', `seasnake-logo-triangle-${suffix}`).replaceAll('id="title"', `id="title-${suffix}"`).replaceAll('id="desc"', `id="desc-${suffix}"`).replace('aria-labelledby="title desc"', `aria-labelledby="title-${suffix} desc-${suffix}"`);
+  });
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  const writers = [];
+  function type(element, string, speed, delay = 0) {
+    const html = element.innerHTML;
+    element.setAttribute('aria-label', element.textContent);
+    element.classList.add('typewriter');
+    element.innerHTML = `<span class="typewriter-reserve" aria-hidden="true">${html}</span><span class="typewriter-output" aria-hidden="true"></span>`;
+    const output = element.querySelector('.typewriter-output');
+    const writer = { output, html, instance: null, started: false }; writers.push(writer);
+    return () => {
+      if (writer.started) return; writer.started = true;
+      if (reduced.matches) output.innerHTML = html;
+      else writer.instance = new Typed(output, { strings: [string], typeSpeed: speed, startDelay: delay, showCursor: false });
+    };
+  }
+  type(document.querySelector('#hero-title'), '光彩跃然', 200)();
+  type(document.querySelector('#hero-poem'), '宛如^500一只蓝色蝴蝶^500扑闪着翅膀在无边海洋上空^500漫舞^500、求索。', 100)();
+  const aboutStory = document.querySelector('#about-story');
+  const startStory = type(aboutStory, aboutStory.innerHTML.replace('并非天蓝', '并非^500天蓝'), 100, 300);
+  document.querySelector('#open-about').addEventListener('click', () => { document.querySelector('#about-dialog').showModal(); startStory(); });
+  document.querySelector('#close-about').addEventListener('click', () => document.querySelector('#about-dialog').close());
+  reduced.addEventListener('change', event => { if (event.matches) writers.forEach(w => { w.instance?.destroy(); w.instance = null; w.output.innerHTML = w.html; }); });
+  const cursor = document.querySelector('.cursor');
+  if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    document.addEventListener('pointermove', event => {
+      const active = !!event.target.closest('.hero') && !document.querySelector('dialog[open]');
+      document.body.classList.toggle('custom-cursor', active);
+      cursor.classList.toggle('visible', active);
+      cursor.classList.toggle('watch', active && !!event.target.closest('.enter-archive'));
+      cursor.style.transform = `translate3d(calc(${event.clientX}px - 50%),calc(${event.clientY}px - 50%),0)`;
+    }, { passive: true });
+    window.addEventListener('blur', () => cursor.classList.remove('visible'));
+    document.documentElement.addEventListener('pointerleave', () => cursor.classList.remove('visible'));
+    window.addEventListener('scroll', () => { cursor.classList.remove('visible'); document.body.classList.remove('custom-cursor'); }, { passive: true });
+  }
+  const observer = new IntersectionObserver(([entry]) => document.querySelector('.site-header').classList.toggle('scrolled', !entry.isIntersecting), { rootMargin: '-110px 0px 0px 0px' });
+  observer.observe(document.querySelector('.hero'));
+  window.addEventListener('pagehide', event => { if (!event.persisted) { observer.disconnect(); writers.forEach(w => w.instance?.destroy()); } });
+}
