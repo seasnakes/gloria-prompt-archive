@@ -49,10 +49,10 @@ dialog{color:var(--ink);background:var(--raised);border:1px solid var(--line);pa
 
 /* The archive sits in the same moving ocean as the introduction. */
 :root{--glass:rgba(9,22,43,.52);--glass-nav:rgba(10,22,42,.78);--glass-line:rgba(225,240,255,.24);--glass-ink:#f2f6ff;--glass-muted:#c3d1e5}
-:root[data-theme=light]{--glass:rgba(247,251,255,.68);--glass-nav:rgba(239,246,255,.88);--glass-line:rgba(255,255,255,.68);--glass-ink:#172941;--glass-muted:#435a75}
+:root[data-theme=light]{--glass:rgba(247,251,255,.68);--glass-nav:rgba(239,246,255,.88);--glass-line:rgba(255,255,255,.68);--glass-ink:#172941;--glass-muted:#354c66}
 .brand{gap:15px;font-size:24px;letter-spacing:.15em}.brand>[data-logo]{width:62px}.brand-sub{display:none}
 .archive{background:rgba(5,15,32,.23);color:var(--glass-ink)}
-:root[data-theme=light] .archive{background:rgba(226,238,253,.24)}
+:root[data-theme=light] .archive{background:rgba(226,238,253,.64)}
 .archive .eyebrow,.archive-intro,.updated-at,.result-count,.archive-footnote,.load-more-area p{color:var(--glass-muted)}
 .site-header.scrolled,.site-header.with-filters{background:var(--glass-nav);color:var(--glass-ink);border-bottom-color:transparent;backdrop-filter:blur(22px) saturate(140%);-webkit-backdrop-filter:blur(22px) saturate(140%)}
 .filter-panel{background:transparent;color:var(--glass-ink);position:relative;isolation:isolate;border-top:0}
