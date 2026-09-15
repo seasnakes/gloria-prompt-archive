@@ -1,0 +1,123 @@
+/* Frosted layers refract the ocean; thumbnails and text stay sharp. */
+:root {
+  --glass: rgba(36, 39, 47, .36);
+  --glass-nav: rgba(25, 28, 35, .88);
+  --glass-line: rgba(244, 247, 255, .28);
+  --glass-ink: #f3f5fa;
+  --glass-muted: #bdc6d4;
+  --glass-highlight: rgba(255, 255, 255, .44);
+  --glass-control: rgba(91, 101, 120, .18);
+}
+:root[data-theme=light] {
+  --glass: rgba(237, 243, 252, .48);
+  --glass-nav: rgba(231, 239, 251, .91);
+  --glass-line: rgba(255, 255, 255, .64);
+  --glass-ink: #18283e;
+  --glass-muted: #3e526b;
+  --glass-highlight: rgba(255, 255, 255, .88);
+  --glass-control: rgba(247, 251, 255, .36);
+}
+.ocean-background { background-color: #202126; }
+.ocean-background[data-state=ready] canvas { opacity: .68; filter: saturate(.7) brightness(.66); }
+.ocean-veil { background: linear-gradient(135deg, #181b254f, #181a2233 50%, #181b2559); }
+:root[data-theme=light] .ocean-background[data-state=ready] canvas { opacity: .85; filter: saturate(.8) brightness(.88); }
+.archive { background: transparent; }
+:root[data-theme=light] .archive { background: rgba(226, 238, 253, .53); }
+
+/* The article remains an untransformed measuring surface for masonry. */
+.work-card, .work-card:hover, .work-card:focus-within {
+  background: none; border: 0; box-shadow: none; overflow: visible;
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+  transition: none; perspective: 1000px;
+}
+.work-card:hover, .work-card:focus-within { z-index: 2; }
+.card-glass {
+  position: relative; isolation: isolate; border-radius: 25px; padding: 7px;
+  overflow: hidden; background: var(--glass);
+  border: 1px solid var(--glass-line);
+  box-shadow: 0 12px 26px #0004, 0 3px 5px #0002,
+    inset 0 1px 0 var(--glass-highlight), inset 1px 0 0 #ffffff16, inset 0 -2px 1px #ffffff14;
+  transform: rotateX(0) rotateY(0);
+  transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .3s, border-color .3s;
+}
+.card-glass::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(135deg, #ffffff12, #ffffff03 45%, #9bb5d414);
+}
+.glass-visible .card-glass::before {
+  backdrop-filter: blur(12px) saturate(125%);
+  -webkit-backdrop-filter: blur(12px) saturate(125%);
+}
+.card-glass::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  box-shadow: inset 0 1px 1px #ffffff65, inset 0 -1px 1px #d3e5ff38;
+  background: radial-gradient(ellipse at var(--shine-x, 15%) var(--shine-y, 0%), #ffffff16, transparent 55%);
+  opacity: .7;
+}
+.card-glass:hover, .work-card:focus-within .card-glass {
+  border-color: #e2eeff80;
+  box-shadow: 0 22px 40px #0005, 0 4px 9px #0003,
+    inset 0 1px 0 var(--glass-highlight), inset 0 -2px 2px #c9dfff28;
+}
+.card-media { border-radius: 18px; box-shadow: 0 1px 0 #ffffff18, 0 4px 14px #0002; }
+.card-info { height: 104px; padding: 15px 10px 11px; }
+.card-title { font-weight: 550; font-size: 15px; line-height: 22px; height: 44px; }
+.card-description { font-size: 11px; line-height: 18px; }
+.card-placeholder { background: linear-gradient(135deg, #c4d5ee16, #7b89a207); }
+.card-copy {
+  position: absolute; top: 17px; right: 17px; width: 36px; height: 36px;
+  display: grid; place-items: center; padding: 8px; border-radius: 50%;
+  color: #fff; border: 1px solid #ffffff70; background: #30374169;
+  box-shadow: inset 0 1px 1px #ffffff80, inset 0 -2px 3px #ffffff20, 0 4px 10px #0003;
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  transition: background .2s, transform .2s;
+}
+.card-copy svg { width: 20px; height: 20px; }
+.card-copy:hover { color: white; background: #61718280; transform: translateY(-2px); }
+.card-copy:active { transform: scale(.94); }
+
+.search-box, .kind-tabs button, .tag-filters button, .select-filters select,
+.theme-toggle, .load-more, .dialog-toolbar button, .section-title button, .work-tags span {
+  background: linear-gradient(135deg, #ffffff0f, #ffffff02 60%), var(--glass-control);
+  border: 1px solid var(--glass-line); color: var(--glass-ink);
+  border-radius: 18px;
+  box-shadow: inset 0 1px 0 #ffffff30, inset 0 -1px 0 #ffffff0d, 0 4px 10px #00000012;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+.kind-tabs { gap: 8px; }
+.kind-tabs button { color: var(--glass-muted); border-radius: 18px; }
+.kind-tabs button[aria-pressed=true], .tag-filters button[aria-pressed=true] {
+  background: linear-gradient(135deg, #b7cce138, #8692ac20); color: var(--glass-ink);
+  border-color: var(--glass-highlight); box-shadow: inset 0 1px 1px #ffffff55, 0 4px 12px #0002;
+}
+.theme-toggle { padding: 6px 12px; border-radius: 22px; color: var(--glass-ink); }
+.select-filters select { border-radius: 13px; }
+.tag-filters { padding: 3px 2px 8px; }
+.tag-filters button { border-radius: 24px; }
+.site-header.scrolled, .site-header.with-filters { box-shadow: none; }
+#work-dialog { background: var(--glass); box-shadow: inset 0 1px 0 var(--glass-highlight), inset 0 -1px 0 #ffffff22, 0 30px 100px #0008; }
+#work-dialog::backdrop { background: #15181d99; }
+.dialog-toolbar button { border-radius: 50%; }
+.work-layout { transform-origin: center 30%; }
+.work-tags span { border-radius: 15px; }
+.section-title button { border-radius: 12px; }
+
+@media (hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference) {
+  .glass-visible .card-glass::before { filter: url(#gloria-glass-refraction); }
+  .card-glass.is-tilted { transform: translateY(-4px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)); }
+}
+@media (max-width:779px) {
+  .card-glass { border-radius: 21px; padding: 5px; }
+  .card-media { border-radius: 15px; }
+  .card-info { height: 88px; padding: 11px 6px 8px; }
+  .card-title { font-size: 12px; line-height: 18px; height: 36px; }
+  .card-description { font-size: 10px; line-height: 16px; }
+  .card-copy { width: 32px; height: 32px; top: 12px; right: 12px; padding: 6px; }
+  .kind-tabs { gap: 5px; }
+  .kind-tabs button { flex: 1; padding-inline: 9px; }
+  .theme-toggle { padding: 5px 9px; }
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  .card-glass, #work-dialog, .search-box, .select-filters select { background: var(--raised); }
+}

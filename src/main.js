@@ -1,4 +1,6 @@
 import './style.css';
+import './liquid-glass.css';
+import { startGlassMotion, createDetailTransition } from './glass-motion.js';
 import { startIntro } from './intro.js';
 import { escapeHTML as esc, filterItems, summaryFor, safeURL } from './catalog.js';
 import { createMasonry } from './masonry.js';
@@ -11,8 +13,6 @@ const $ = selector => document.querySelector(selector);
 const base = import.meta.env.BASE_URL;
 const mediaURL = path => { if (!path) return ''; if (/^https:\/\//.test(path)) return safeURL(path) || ''; return new URL(base + path, location.href.split('#')[0]).href; };
 const storage = { get(key) { try { return localStorage.getItem(key); } catch { return null; } }, set(key, value) { try { localStorage.setItem(key, value); return true; } catch { return false; } } };
-let favorites;
-try { const saved = JSON.parse(storage.get('gloria-favorites') || '[]'); favorites = new Set(Array.isArray(saved) ? saved.filter(x => typeof x === 'string') : []); } catch { favorites = new Set(); }
 let items = [], filtered = [], limit = 24, current = null, modalItems = [], lastFocus, toastTimer;
 const filters = { kind: 'all', query: '', source: '', model: '', method: '', tag: '' };
 const dialog = $('#work-dialog'), video = $('#work-video');
@@ -28,27 +28,21 @@ const masonry = createMasonry($('#gallery'));
 const covers = createCoverLoader(mediaURL, () => masonry.schedule());
 const sticky = startStickyFilters();
 
-function updateFavoriteButtons() {
-  const count = items.filter(item => favorites.has(item.id)).length;
-  $('[data-kind="favorites"] span').textContent = count;
-  document.querySelectorAll('.card-favorite').forEach(button => { const active = favorites.has(button.dataset.favorite); button.setAttribute('aria-pressed', active); button.textContent = active ? '♥' : '♡'; button.setAttribute('aria-label', `${active ? '取消收藏' : '收藏'}：${items.find(item => item.id === button.dataset.favorite)?.title || ''}`); });
-  if (current) { const active = favorites.has(current.id); $('#detail-favorite').textContent = active ? '♥ 已收藏' : '♡ 收藏'; $('#detail-favorite').setAttribute('aria-pressed', active); }
+const copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="3"/><path d="M15 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"/></svg>';
+function copyWork(item) {
+  if (item.prompt) copy(item.prompt, '提示词已复制');
+  else copy(new URL(`#work/${encodeURIComponent(item.id)}`, location.href).href, '这条作品没有原始提示词，已复制作品链接');
 }
-function toggleFavorite(id) {
-  const adding = !favorites.has(id); adding ? favorites.add(id) : favorites.delete(id);
-  const saved = storage.set('gloria-favorites', JSON.stringify([...favorites]));
-  updateFavoriteButtons();
-  if (filters.kind === 'favorites') render();
-  toast(saved ? (adding ? '已收藏，保存在当前浏览器' : '已取消收藏') : '已更新本次收藏，浏览器暂不允许保存');
-}
+startGlassMotion($('#gallery'));
+const detailTransition = createDetailTransition($('.work-layout'));
 function card(item) {
   const article = document.createElement('article'); article.className = 'work-card'; article.dataset.id = item.id;
-  article.innerHTML = `<button class="card-open" data-open="${esc(item.id)}" aria-label="查看作品：${esc(item.title)}"><span class="card-media" style="--ratio:${item.width}/${item.height}"><span class="card-placeholder" aria-hidden="true"><span class="placeholder-mark">✧</span><span class="placeholder-title">${esc(item.title)}</span><span class="placeholder-lines"><i></i><i></i></span></span><img alt="${esc(item.title)}" width="${item.width}" height="${item.height}" decoding="async"><span class="card-error"><strong>封面暂未就绪</strong><span>可打开作品查看视频</span></span></span><span class="card-info"><span class="card-title">${esc(item.title)}</span><span class="card-description">${esc(summaryFor(item))}</span><span class="card-caption">${esc(item.source)} · ${esc(item.model)}</span></span></button><button class="card-favorite" data-favorite="${esc(item.id)}" aria-label="收藏：${esc(item.title)}" aria-pressed="false">♡</button>`;
+  article.innerHTML = `<div class="card-glass"><button class="card-open" data-open="${esc(item.id)}" aria-label="查看作品：${esc(item.title)}"><span class="card-media" style="--ratio:${item.width}/${item.height}"><span class="card-placeholder" aria-hidden="true"><span class="placeholder-mark">✧</span><span class="placeholder-title">${esc(item.title)}</span><span class="placeholder-lines"><i></i><i></i></span></span><img alt="${esc(item.title)}" width="${item.width}" height="${item.height}" decoding="async"><span class="card-error"><strong>封面暂未就绪</strong><span>可打开作品查看视频</span></span></span><span class="card-info"><span class="card-title">${esc(item.title)}</span><span class="card-description">${esc(summaryFor(item))}</span><span class="card-caption">${esc(item.source)} · ${esc(item.model)}</span></span></button><button class="card-copy" data-copy="${esc(item.id)}" aria-label="${item.prompt ? '复制提示词' : '复制作品链接'}：${esc(item.title)}" title="${item.prompt ? '复制提示词' : '复制作品链接'}">${copyIcon}</button></div>`;
   covers.observe(article, item);
   return article;
 }
 function render(append = false) {
-  filtered = filterItems(items, filters, favorites);
+  filtered = filterItems(items, filters);
   const gallery = $('#gallery');
   const before = append ? gallery.children.length : 0;
   if (!append) { covers.clear(gallery); gallery.replaceChildren(); }
@@ -64,12 +58,11 @@ function render(append = false) {
   $('#load-more-area').hidden = !filtered.length;
   $('#batch-status').textContent = `已呈现 ${Math.min(limit, filtered.length)} / ${filtered.length}`;
   $('#load-more').hidden = limit >= filtered.length;
-  updateFavoriteButtons();
 }
 function applyFilters() { limit = 24; render(); }
 function resetFilters() { clearTimeout(searchTimer); Object.assign(filters, { kind: 'all', query: '', source: '', model: '', method: '', tag: '' }); $('#search').value = ''; ['source', 'model', 'method'].forEach(name => $(`#${name}-filter`).value = ''); applyFilters(); }
 $('#gallery').addEventListener('click', event => {
-  const favorite = event.target.closest('[data-favorite]'); if (favorite) { toggleFavorite(favorite.dataset.favorite); return; }
+  const button = event.target.closest('[data-copy]'); if (button) { const item = items.find(item => item.id === button.dataset.copy); if (item) copyWork(item); return; }
   const open = event.target.closest('[data-open]'); if (open) openWork(open.dataset.open, true);
 });
 document.querySelectorAll('[data-kind]').forEach(button => button.addEventListener('click', () => { filters.kind = button.dataset.kind; applyFilters(); }));
@@ -138,13 +131,14 @@ function openWork(id, push = false) {
   $('#parameters-text').textContent = [`${item.width} × ${item.height} · ${item.duration ? item.duration + ' 秒' : '时长未标注'}`, item.parameters].filter(Boolean).join('\n\n');
   const source = safeURL(item.sourceUrl); $('#source-link').hidden = !source; if (source) $('#source-link').href = source;
   $('#media-caption').textContent = '点击播放视频 · 作品及提示词权利归原作者所有';
-  setVideo(item); updateFavoriteButtons();
+  setVideo(item);
   $('.work-info').scrollTop = 0;
   if (!dialog.open) dialog.showModal();
   dialog.scrollTop = 0;
   if (push) history.pushState({ gloriaWork: true }, '', `#work/${encodeURIComponent(id)}`);
 }
 function closeWork(updateURL = true) {
+  detailTransition.cancel();
   video.pause(); video.removeAttribute('src'); video.removeAttribute('poster'); video.load(); current = null;
   if (dialog.open) dialog.close();
   if (updateURL && location.hash.startsWith('#work/')) {
@@ -153,11 +147,20 @@ function closeWork(updateURL = true) {
   }
   lastFocus?.focus({ preventScroll: true });
 }
-function moveWork(offset) { if (!current) return; const position = modalItems.findIndex(item => item.id === current.id); const item = modalItems[position + offset]; if (item) { openWork(item.id); history.replaceState(history.state, '', `#work/${encodeURIComponent(item.id)}`); } }
+function moveWork(offset) {
+  if (!current || detailTransition.busy) return;
+  const position = modalItems.findIndex(item => item.id === current.id);
+  const item = modalItems[position + offset];
+  if (!item) return;
+  video.pause();
+  detailTransition.move(offset, () => {
+    openWork(item.id);
+    history.replaceState(history.state, '', `#work/${encodeURIComponent(item.id)}`);
+  });
+}
 $('#close-work').addEventListener('click', () => closeWork());
 dialog.addEventListener('cancel', event => { event.preventDefault(); closeWork(); });
 $('#previous-work').addEventListener('click', () => moveWork(-1)); $('#next-work').addEventListener('click', () => moveWork(1));
-$('#detail-favorite').addEventListener('click', () => current && toggleFavorite(current.id));
 video.addEventListener('error', () => { if (current && video.hasAttribute('src')) $('#video-error').hidden = false; });
 $('#retry-video').addEventListener('click', async () => {
   if (!current) return;
@@ -184,7 +187,7 @@ document.addEventListener('keydown', event => {
   if (dialog.open && !event.target.closest('video')) { if (event.key === 'ArrowLeft') { event.preventDefault(); moveWork(-1); } if (event.key === 'ArrowRight') { event.preventDefault(); moveWork(1); } }
   else if (event.key === '/' && !document.querySelector('dialog[open]')) { event.preventDefault(); sticky.reveal(); $('#search').focus(); }
 });
-function readHash() { if (location.hash.startsWith('#work/')) { const id = location.hash.slice(6); if (items.some(item => item.id === id)) openWork(id); else toast('未找到这个作品，可能已从收录中移除'); } else if (dialog.open) closeWork(false); }
+function readHash() { detailTransition.cancel(); if (location.hash.startsWith('#work/')) { const id = location.hash.slice(6); if (items.some(item => item.id === id)) openWork(id); else toast('未找到这个作品，可能已从收录中移除'); } else if (dialog.open) closeWork(false); }
 window.addEventListener('popstate', readHash);
 async function loadCatalog() {
   $('#catalog-error').hidden = true; $('#result-count').textContent = '正在整理影像…';
