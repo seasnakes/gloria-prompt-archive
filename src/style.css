@@ -15,3 +15,34 @@ dialog{color:var(--ink);background:var(--raised);border:1px solid var(--line);pa
 @media(max-height:650px) and (min-width:781px){.hero{min-height:570px}.hero-heading{margin-top:45px}.hero h1{font-size:100px}.marquee{margin-top:24px}.hero-invitation{margin-top:25px}.hero-invitation>p:first-child{margin-bottom:10px}.hero-footer{bottom:18px}}
 @media(max-width:780px){#work-dialog{overflow:auto}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation:none!important;transition:none!important}.cursor{display:none}.custom-cursor .hero,.custom-cursor .hero a,.custom-cursor .hero button{cursor:auto}}
+
+/* Shared header edge; the filter spacer never changes with scroll direction. */
+:root{--header-height:96px}
+.filter-anchor{position:relative;margin-bottom:28px}
+.filter-panel{margin:0!important;background:var(--surface);padding:22px 0 20px;transform:translateY(0);transition:transform .22s ease,opacity .18s ease;z-index:19}
+.filter-panel.is-fixed{position:fixed;top:var(--header-height);left:var(--filter-left);width:var(--filter-width);box-shadow:0 0 0 100vmax var(--surface);clip-path:inset(0 -100vmax);border-top:0}
+.filter-panel.is-hidden{transform:translateY(-100%);opacity:0;pointer-events:none}
+.site-header.with-filters{background:var(--surface);border-bottom-color:transparent;backdrop-filter:none}
+.tag-filters{max-height:104px;overflow:auto;scrollbar-width:thin;padding-bottom:3px}
+.gallery{position:relative;columns:unset!important;display:block;min-height:0;overflow-anchor:none}
+.work-card{position:absolute;top:0;left:0;margin:0;display:block;break-inside:auto;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--raised)}
+.card-open{display:block}
+.card-media{border-radius:0;background:color-mix(in srgb,var(--accent) 5%,var(--raised));aspect-ratio:var(--ratio);min-height:40px}
+.card-media img{position:absolute;inset:0;object-fit:contain;transition:opacity .3s ease}
+.card-open:hover img{transform:none}
+.card-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;color:var(--muted);background:radial-gradient(ellipse at 25% 20%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 65%);transition:opacity .25s}
+.placeholder-mark{font-size:32px;line-height:1;color:var(--accent);opacity:.5}
+.placeholder-title{font-family:"Songti SC",serif;font-size:15px;text-align:center;line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;opacity:.8}
+.placeholder-lines{width:50%;display:grid;gap:7px;justify-items:center}.placeholder-lines i{width:100%;height:3px;border-radius:4px;background:var(--line)}.placeholder-lines i:last-child{width:65%}
+.work-card.ready .card-placeholder,.work-card.failed .card-placeholder{opacity:0;pointer-events:none}
+.card-info{display:block;height:100px;padding:13px 14px 12px}
+.card-title{margin:0 15px 6px 0;font-size:14px;line-height:20px;height:40px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-weight:500}
+.card-description{display:block;font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:16px}
+.card-caption{display:none}
+.card-favorite{top:8px;right:8px;bottom:auto;border-radius:50%;width:32px;height:32px;background:#11172280;color:#fff;font-size:20px;backdrop-filter:blur(8px)}
+.card-top{max-width:calc(100% - 62px)}
+#load-sentinel{height:1px}
+@media(max-width:780px){.filter-panel{padding-block:14px}.filter-top{gap:12px}.filter-bottom{margin-top:12px}.tag-filters{margin-top:12px;max-height:78px}.card-info{height:94px;padding:10px}.card-title{font-size:12px;line-height:19px;height:38px}.card-description{font-size:10px}.placeholder-title{font-size:12px}.card-placeholder{padding:14px;gap:10px}.placeholder-mark{font-size:24px}}
+@media(prefers-reduced-motion:reduce){.filter-panel,.card-media img,.card-placeholder{transition:none}}
+
+@media(max-width:480px){.select-filters label{flex:1;min-width:0}.select-filters select{min-width:0;width:100%;max-width:100%}.placeholder-mark{flex-shrink:0;font-size:20px}.placeholder-lines{flex-shrink:0}.placeholder-title{min-height:0}.card-placeholder{gap:7px;padding:10px}}

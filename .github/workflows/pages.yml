@@ -2,6 +2,8 @@ name: Publish GitHub Pages
 on:
   push:
     branches: [main]
+  schedule:
+    - cron: '23 */6 * * *'
   workflow_dispatch:
 permissions:
   contents: read
@@ -13,6 +15,7 @@ concurrency:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -24,6 +27,14 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      - run: python3 -m unittest discover -s tests -p 'test_*.py'
+      - name: Read Feishu catalog and refresh media links
+        env:
+          LARK_APP_ID: ${{ secrets.LARK_APP_ID }}
+          LARK_APP_SECRET: ${{ secrets.LARK_APP_SECRET }}
+          LARK_BASE_TOKEN: ${{ secrets.LARK_BASE_TOKEN }}
+          LARK_TABLE_ID: ${{ secrets.LARK_TABLE_ID }}
+        run: npm run sync:api
       - run: npm run build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4

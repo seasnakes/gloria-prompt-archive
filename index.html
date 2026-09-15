@@ -16,7 +16,6 @@
     <nav aria-label="主导航"><a href="#archive">灵感库</a><button id="open-favorites">收藏 <span id="favorite-count">0</span></button><button id="open-about">关于</button></nav>
     <button class="theme-toggle" id="theme-toggle" aria-label="切换为浅色主题"><span class="theme-icon" aria-hidden="true">☼</span><span class="theme-label">浅色</span></button>
   </header>
-  <div class="cursor" aria-hidden="true"><span data-logo="cursor"></span></div>
   <main id="top">
     <section class="hero" id="hero" aria-labelledby="hero-title">
       <div class="hero-lines" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
@@ -27,10 +26,11 @@
     </section>
     <section id="archive" class="archive" aria-labelledby="archive-title" tabindex="-1">
       <div class="archive-heading"><div><p class="eyebrow">A COLLECTION OF POSSIBILITIES</p><h2 id="archive-title">影像灵感库<span id="total-count"></span></h2><p class="archive-intro">让片刻的灵感，有处可寻。</p></div><p class="updated-at" id="updated-at"></p></div>
-      <div class="filter-panel">
+      <div class="filter-anchor"><div class="filter-panel">
         <div class="filter-top"><div class="kind-tabs" role="group" aria-label="收录类型"><button data-kind="all" aria-pressed="true">全部 <span></span></button><button data-kind="prompt" aria-pressed="false">有提示词 <span></span></button><button data-kind="reference" aria-pressed="false">效果参考 <span></span></button><button data-kind="favorites" aria-pressed="false">我的收藏 <span></span></button></div><label class="search-box"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="搜索作品、提示词、风格…" aria-label="搜索作品、提示词、风格" autocomplete="off"><kbd aria-hidden="true">/</kbd></label></div>
         <div class="filter-bottom"><div class="select-filters"><label>来源<select id="source-filter" aria-label="筛选来源"><option value="">全部来源</option></select></label><label>模型<select id="model-filter" aria-label="筛选模型"><option value="">全部模型</option></select></label><label>方式<select id="method-filter" aria-label="筛选生成方式"><option value="">全部方式</option></select></label></div><button id="reset-filters" class="quiet-button" hidden>清除筛选 ×</button><span id="result-count" class="result-count" aria-live="polite">正在整理影像…</span></div>
         <div class="tag-filters" id="tag-filters" role="group" aria-label="筛选风格"></div>
+      </div>
       </div>
       <div id="catalog-error" class="empty-state" hidden><p>暂时没能读取灵感库。</p><button id="retry-catalog">重新加载</button></div>
       <div id="empty-state" class="empty-state" hidden><span aria-hidden="true">◌</span><h3>灵感还在别处</h3><p>换个关键词，或清除筛选再看看。</p><button id="empty-reset">查看全部作品</button></div>
