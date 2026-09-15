@@ -7,7 +7,7 @@ export function startBackground() {
   const toggle = document.querySelector('.ocean-toggle');
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   let fluid, frame = 0, timer, previous = null, last = 0, fpsAt = 0, frames = 0;
-  let paused = reducedMotion.matches, failed = false, offscreen = false, modalOpen = false, observer, dialogObserver;
+  let paused = reducedMotion.matches, failed = false, modalOpen = false, dialogObserver;
   const abort = new AbortController();
   const listen = (target, name, fn, options = {}) => target.addEventListener(name, fn, { ...options, signal: abort.signal });
   const resetPointer = () => { previous = null; fluid?.targetTilt.set(0, 0); };
@@ -27,9 +27,9 @@ export function startBackground() {
   };
   const animate = now => {
     frame = 0;
-    if (failed || paused || document.hidden || offscreen || modalOpen) return;
+    if (failed || paused || document.hidden) return;
     // A calm background uses at most 30 rendered frames per second.
-    if (now - last >= 1000 / 30 - .5) {
+    if (now - last >= 1000 / (modalOpen ? 18 : 30) - .5) {
       const dt = Math.min((now - last) / 1000, 1 / 30);
       last = now;
       fluid.step(dt);
@@ -42,7 +42,7 @@ export function startBackground() {
   };
   const syncMotion = () => {
     cancelAnimationFrame(frame); frame = 0;
-    fluid.params.paused = failed || paused || document.hidden || offscreen || modalOpen;
+    fluid.params.paused = failed || paused || document.hidden;
     resetPointer();
     fluid.pendingSplats.length = 0;
     last = fpsAt = performance.now(); frames = 0;
@@ -57,13 +57,11 @@ export function startBackground() {
     layer.dataset.state = 'ready';
     toggle.hidden = false;
     Object.defineProperty(window, 'gloriaBackground', { configurable: true, value: Object.freeze({
-      get stats() { return { ...fluid.stats, integrationVersion: 2, state: layer.dataset.state, framePending: !!frame }; }
+      get stats() { return { ...fluid.stats, integrationVersion: 3, state: layer.dataset.state, framePending: !!frame }; }
     }) });
     listen(toggle, 'click', () => { paused = !paused; syncMotion(); });
     listen(reducedMotion, 'change', event => { paused = event.matches; syncMotion(); });
     listen(document, 'visibilitychange', syncMotion);
-    observer = new IntersectionObserver(([entry]) => { offscreen = !entry.isIntersecting; syncMotion(); });
-    observer.observe(document.querySelector('.hero'));
     const syncDialog = () => { modalOpen = !!document.querySelector('dialog[open]'); syncMotion(); };
     dialogObserver = new MutationObserver(syncDialog);
     document.querySelectorAll('dialog').forEach(dialog => dialogObserver.observe(dialog, { attributes: true, attributeFilter: ['open'] }));
@@ -73,7 +71,7 @@ export function startBackground() {
     listen(window, 'pointercancel', resetPointer);
     listen(window, 'pointerup', event => { if (event.pointerType !== 'mouse') resetPointer(); });
     listen(window, 'pointermove', event => {
-      if (paused || failed || document.hidden || offscreen || !event.target.closest('.hero')) { resetPointer(); return; }
+      if (paused || failed || document.hidden || modalOpen) { resetPointer(); return; }
       const rect = canvas.getBoundingClientRect();
       const p = { x: (event.clientX - rect.left) / rect.width, y: 1 - (event.clientY - rect.top) / rect.height };
       fluid.targetTilt.set((p.x - .5) * .8, (p.y - .5) * .8);
@@ -101,7 +99,7 @@ export function startBackground() {
     });
     listen(window, 'pagehide', event => {
       cancelAnimationFrame(frame); frame = 0; clearTimeout(timer);
-      if (!event.persisted) { observer?.disconnect(); dialogObserver?.disconnect(); abort.abort(); fluid.dispose(); }
+      if (!event.persisted) { dialogObserver?.disconnect(); abort.abort(); fluid.dispose(); }
     });
     listen(window, 'pageshow', event => { if (event.persisted && !failed) syncMotion(); });
     syncMotion();

@@ -23,10 +23,6 @@ export function startIntro() {
   }
   type(document.querySelector('#hero-title'), '光彩跃然', 200)();
   type(document.querySelector('#hero-poem'), '宛如^500一只蓝色蝴蝶^500扑闪着翅膀在无边海洋上空^500漫舞^500、求索。', 100)();
-  const aboutStory = document.querySelector('#about-story');
-  const startStory = type(aboutStory, aboutStory.innerHTML.replace('并非天蓝', '并非^500天蓝'), 100, 300);
-  document.querySelector('#open-about').addEventListener('click', () => { document.querySelector('#about-dialog').showModal(); startStory(); });
-  document.querySelector('#close-about').addEventListener('click', () => document.querySelector('#about-dialog').close());
   reduced.addEventListener('change', event => { if (event.matches) writers.forEach(w => { w.instance?.destroy(); w.instance = null; w.output.innerHTML = w.html; }); });
   const observer = new IntersectionObserver(([entry]) => document.querySelector('.site-header').classList.toggle('scrolled', !entry.isIntersecting), { rootMargin: '-110px 0px 0px 0px' });
   observer.observe(document.querySelector('.hero'));

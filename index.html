@@ -12,8 +12,7 @@
   <a class="skip-link" href="#archive">跳到影像灵感库</a>
   <div class="ocean-background" data-state="loading" aria-hidden="true"><canvas id="gloria-ocean"></canvas><div class="ocean-veil"></div></div>
   <header class="site-header">
-    <a class="brand" href="#top" aria-label="光彩跃然 首页"><span data-logo="header"></span><span>GLORIA<span class="brand-sub">BY SEASNAKE</span></span></a>
-    <nav aria-label="主导航"><a href="#archive">灵感库</a><button id="open-favorites">收藏 <span id="favorite-count">0</span></button><button id="open-about">关于</button></nav>
+    <a class="brand" href="#top" aria-label="光彩跃然 首页"><span data-logo="header"></span><span>GLORIA</span></a>
     <button class="theme-toggle" id="theme-toggle" aria-label="切换为浅色主题"><span class="theme-icon" aria-hidden="true">☼</span><span class="theme-label">浅色</span></button>
   </header>
   <main id="top">
@@ -22,7 +21,7 @@
       <div class="hero-heading"><h1 id="hero-title">光彩跃然</h1></div>
       <div class="marquee" aria-label="美人之美，各美其美。美美与共，天下大同。"><div class="marquee-track" aria-hidden="true"><span>美人之美 各美其美 / 美美与共 天下大同 / 美人之美 各美其美 / 美美与共 天下大同 / </span><span>美人之美 各美其美 / 美美与共 天下大同 / 美人之美 各美其美 / 美美与共 天下大同 / </span></div></div>
       <div class="hero-invitation"><p id="hero-poem">宛如一只蓝色蝴蝶扑闪着翅膀在无边海洋上空漫舞、求索。</p><a class="enter-archive" href="#archive"><span>浏览灵感</span><span aria-hidden="true">↓</span></a><p class="hero-count" id="hero-count">提示词 · 视频 · 创作参考</p></div>
-      <div class="hero-footer"><span>Don't wake me. I'm not dreaming.</span><span class="hero-scroll">SCROLL TO EXPLORE</span><button class="ocean-toggle" hidden aria-pressed="false">暂停流动</button></div>
+      <div class="hero-footer"><span>Don't wake me. I'm not dreaming.</span><button class="ocean-toggle" hidden aria-pressed="false">暂停流动</button></div>
     </section>
     <section id="archive" class="archive" aria-labelledby="archive-title" tabindex="-1">
       <div class="archive-heading"><div><p class="eyebrow">A COLLECTION OF POSSIBILITIES</p><h2 id="archive-title">影像灵感库<span id="total-count"></span></h2><p class="archive-intro">让片刻的灵感，有处可寻。</p></div><p class="updated-at" id="updated-at"></p></div>
@@ -41,7 +40,6 @@
   </main>
   <footer class="site-footer"><a href="#top">光彩跃然<span>BY SEASNAKE</span></a><p>美人之美，各美其美。</p><div><a href="https://github.com/seasnakes/gloria-prompt-archive" target="_blank" rel="noopener noreferrer">GitHub ↗</a><a href="https://www.zhihu.com/people/SeASnAkE" target="_blank" rel="noopener noreferrer">知乎 ↗</a><span id="site-version"></span></div></footer>
   <dialog id="work-dialog" aria-labelledby="work-title"><div class="dialog-toolbar"><span id="work-position"></span><div><button id="previous-work" aria-label="上一个作品">←</button><button id="next-work" aria-label="下一个作品">→</button><button id="close-work" aria-label="关闭详情">×</button></div></div><div class="work-layout"><div class="work-media"><video id="work-video" controls playsinline preload="none" aria-label="作品视频"></video><div id="video-error" hidden><p>视频暂时无法播放。</p><button id="retry-video">重新加载视频</button></div><p id="media-caption"></p></div><div class="work-info"><div class="work-topline"><span class="type-label" id="work-kind"></span><button id="detail-favorite" class="quiet-button" aria-pressed="false">♡ 收藏</button></div><h2 id="work-title"></h2><p id="work-credit"></p><div class="work-tags" id="work-tags"></div><dl class="work-facts" id="work-facts"></dl><section class="prompt-section"><div class="section-title"><h3 id="prompt-title">提示词</h3><button id="copy-prompt">复制提示词</button></div><div class="prompt-text" id="prompt-text"></div><p id="prompt-note" class="prompt-note"></p></section><section class="negative-section" id="negative-section" hidden><div class="section-title"><h3>负面提示词</h3><button id="copy-negative">复制</button></div><p class="prompt-text" id="negative-text"></p></section><details id="parameters-section"><summary>视频信息与参数</summary><p id="parameters-text"></p></details><div class="work-actions"><a id="source-link" target="_blank" rel="noopener noreferrer">查看原始来源 ↗</a><button id="share-work">复制作品链接 ↗</button></div></div></div></dialog>
-  <dialog id="about-dialog" aria-labelledby="about-title"><button id="close-about" class="close-about" aria-label="关闭关于">×</button><p class="eyebrow">GLORIA · BY SEASNAKE</p><h2 id="about-title">属于自己的<br>生命之蓝。</h2><p id="about-story">不为争渡到某个梦境般的彼岸，<br>只是幻想着在微澜之间掀起一场风暴浪潮，让世界感受自己的壮阔波澜。<br>在它心中，自己翅膀上那抹色彩并非天蓝或海蓝，<br>而是独一无二、属于自己的生命之蓝。</p><div class="about-notes"><p>这里收集提示词、影像和视觉效果，保留各自的来源，等待下一次创作。</p><p>作品及提示词权利归原作者所有。收藏保存在当前浏览器中。</p></div></dialog>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script type="module" src="/src/main.js"></script>
 </body>

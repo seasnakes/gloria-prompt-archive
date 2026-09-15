@@ -4,6 +4,7 @@ import { escapeHTML as esc, filterItems, summaryFor, safeURL } from './catalog.j
 import { createMasonry } from './masonry.js';
 import { createCoverLoader } from './gallery-media.js';
 import { startStickyFilters } from './sticky-filters.js';
+import { fitVideoLayout } from './video-layout.js';
 import { version } from '../package.json';
 
 const $ = selector => document.querySelector(selector);
@@ -29,7 +30,6 @@ const sticky = startStickyFilters();
 
 function updateFavoriteButtons() {
   const count = items.filter(item => favorites.has(item.id)).length;
-  $('#favorite-count').textContent = count;
   $('[data-kind="favorites"] span').textContent = count;
   document.querySelectorAll('.card-favorite').forEach(button => { const active = favorites.has(button.dataset.favorite); button.setAttribute('aria-pressed', active); button.textContent = active ? '♥' : '♡'; button.setAttribute('aria-label', `${active ? '取消收藏' : '收藏'}：${items.find(item => item.id === button.dataset.favorite)?.title || ''}`); });
   if (current) { const active = favorites.has(current.id); $('#detail-favorite').textContent = active ? '♥ 已收藏' : '♡ 收藏'; $('#detail-favorite').setAttribute('aria-pressed', active); }
@@ -43,7 +43,7 @@ function toggleFavorite(id) {
 }
 function card(item) {
   const article = document.createElement('article'); article.className = 'work-card'; article.dataset.id = item.id;
-  article.innerHTML = `<button class="card-open" data-open="${esc(item.id)}" aria-label="查看作品：${esc(item.title)}"><span class="card-media" style="--ratio:${item.width}/${item.height}"><span class="card-placeholder" aria-hidden="true"><span class="placeholder-mark">✧</span><span class="placeholder-title">${esc(item.title)}</span><span class="placeholder-lines"><i></i><i></i></span></span><img alt="${esc(item.title)}" width="${item.width}" height="${item.height}" decoding="async"><span class="card-top"><span class="play-dot" aria-hidden="true">▶</span> ${titleForKind(item.kind)}</span><span class="card-error"><strong>封面暂未就绪</strong><span>可打开作品查看视频</span></span></span><span class="card-info"><span class="card-title">${esc(item.title)}</span><span class="card-description">${esc(summaryFor(item))}</span><span class="card-caption">${esc(item.source)} · ${esc(item.model)}</span></span></button><button class="card-favorite" data-favorite="${esc(item.id)}" aria-label="收藏：${esc(item.title)}" aria-pressed="false">♡</button>`;
+  article.innerHTML = `<button class="card-open" data-open="${esc(item.id)}" aria-label="查看作品：${esc(item.title)}"><span class="card-media" style="--ratio:${item.width}/${item.height}"><span class="card-placeholder" aria-hidden="true"><span class="placeholder-mark">✧</span><span class="placeholder-title">${esc(item.title)}</span><span class="placeholder-lines"><i></i><i></i></span></span><img alt="${esc(item.title)}" width="${item.width}" height="${item.height}" decoding="async"><span class="card-error"><strong>封面暂未就绪</strong><span>可打开作品查看视频</span></span></span><span class="card-info"><span class="card-title">${esc(item.title)}</span><span class="card-description">${esc(summaryFor(item))}</span><span class="card-caption">${esc(item.source)} · ${esc(item.model)}</span></span></button><button class="card-favorite" data-favorite="${esc(item.id)}" aria-label="收藏：${esc(item.title)}" aria-pressed="false">♡</button>`;
   covers.observe(article, item);
   return article;
 }
@@ -78,7 +78,6 @@ $('#search').addEventListener('input', event => { const value = event.target.val
 ['source', 'model', 'method'].forEach(name => $(`#${name}-filter`).addEventListener('change', event => { filters[name] = event.target.value; applyFilters(); }));
 $('#tag-filters').addEventListener('click', event => { const button = event.target.closest('[data-tag]'); if (button) { filters.tag = filters.tag === button.dataset.tag ? '' : button.dataset.tag; applyFilters(); } });
 $('#reset-filters').addEventListener('click', resetFilters); $('#empty-reset').addEventListener('click', resetFilters);
-$('#open-favorites').addEventListener('click', () => { filters.kind = 'favorites'; applyFilters(); $('#archive').scrollIntoView({ behavior: 'smooth' }); });
 let appending = false, armed = true;
 function loadMore() {
   if (appending || limit >= filtered.length || !$('#gallery').clientWidth || !$('#gallery').offsetHeight) return;
@@ -93,9 +92,27 @@ new IntersectionObserver(entries => {
   }
 }, { rootMargin: '350px 0px' }).observe($('#load-sentinel'));
 
+function updateVideoLayout(width, height) {
+  const layout = fitVideoLayout(width, height, innerWidth, innerHeight);
+  dialog.dataset.orientation = layout.orientation;
+  dialog.style.setProperty('--dialog-width', `${layout.dialogWidth}px`);
+  dialog.style.setProperty('--media-width', `${layout.mediaWidth}px`);
+  dialog.style.setProperty('--video-ratio', `${width || 16}/${height || 9}`);
+}
+video.addEventListener('loadedmetadata', () => {
+  if (current && video.currentSrc === mediaURL(current.video)) updateVideoLayout(video.videoWidth, video.videoHeight);
+});
+let videoResizeFrame;
+window.addEventListener('resize', () => {
+  cancelAnimationFrame(videoResizeFrame);
+  videoResizeFrame = requestAnimationFrame(() => {
+    if (current) updateVideoLayout(video.videoWidth || current.width, video.videoHeight || current.height);
+  });
+});
 function setVideo(item) {
   video.pause(); video.removeAttribute('src'); video.load();
   $('#video-error').hidden = true;
+  updateVideoLayout(item.width, item.height);
   video.poster = mediaURL(item.cover); video.preload = 'metadata';
   const url = mediaURL(item.video);
   if (url) { video.src = url; video.load(); } else { $('#video-error').hidden = false; }
