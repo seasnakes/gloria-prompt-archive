@@ -24,7 +24,8 @@ export function startStickyFilters() {
     fixed = rect.top <= headerHeight;
     panel.classList.toggle('is-fixed', fixed);
     header.classList.toggle('with-filters', fixed);
-    if (!fixed || rect.bottom > headerHeight || panel.contains(document.activeElement)) {
+    const editing = panel.contains(document.activeElement) && document.activeElement.matches('input,textarea,select');
+    if (!fixed || rect.bottom > headerHeight || editing) {
       show(false); distance = 0;
     } else if (Math.abs(delta) > 1) {
       const next = Math.sign(delta);

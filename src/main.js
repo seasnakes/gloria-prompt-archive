@@ -1,5 +1,9 @@
 import './style.css';
 import './liquid-glass.css';
+import './compact-ui.css';
+import { icon, mountIcons } from './icons.js';
+import { startCompactFilters } from './compact-filters.js';
+import { startWorkSwipe } from './work-swipe.js';
 import { startGlassMotion, createDetailTransition } from './glass-motion.js';
 import { startIntro } from './intro.js';
 import { escapeHTML as esc, filterItems, summaryFor, safeURL } from './catalog.js';
@@ -9,6 +13,7 @@ import { startStickyFilters } from './sticky-filters.js';
 import { fitVideoLayout } from './video-layout.js';
 import { version } from '../package.json';
 
+mountIcons();
 const $ = selector => document.querySelector(selector);
 const base = import.meta.env.BASE_URL;
 const mediaURL = path => { if (!path) return ''; if (/^https:\/\//.test(path)) return safeURL(path) || ''; return new URL(base + path, location.href.split('#')[0]).href; };
@@ -18,7 +23,7 @@ const filters = { kind: 'all', query: '', source: '', model: '', method: '', tag
 const dialog = $('#work-dialog'), video = $('#work-video');
 const titleForKind = kind => kind === 'prompt' ? '有提示词' : '效果参考';
 function toast(message) { $('#toast').textContent = message; $('#toast').classList.add('visible'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('#toast').classList.remove('visible'), 2600); }
-function setTheme(theme) { document.documentElement.dataset.theme = theme; const light = theme === 'light'; $('#theme-toggle').setAttribute('aria-label', `切换为${light ? '深' : '浅'}色主题`); $('.theme-label').textContent = light ? '深色' : '浅色'; $('.theme-icon').textContent = light ? '◐' : '☼'; }
+function setTheme(theme) { document.documentElement.dataset.theme = theme; const light = theme === 'light'; $('#theme-toggle').setAttribute('aria-label', `切换为${light ? '深' : '浅'}色主题`); $('.theme-label').textContent = light ? '深色' : '浅色'; $('.theme-icon').innerHTML = icon(light ? 'moon' : 'sun'); }
 setTheme(storage.get('gloria-theme') === 'light' ? 'light' : 'dark');
 $('#theme-toggle').addEventListener('click', () => { const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; setTheme(theme); storage.set('gloria-theme', theme); });
 startIntro();
@@ -28,7 +33,8 @@ const masonry = createMasonry($('#gallery'));
 const covers = createCoverLoader(mediaURL, () => masonry.schedule());
 const sticky = startStickyFilters();
 
-const copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="3"/><path d="M15 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"/></svg>';
+const copyIcon = icon('copy');
+const filterUI = startCompactFilters({ getFilters: () => filters, apply(values) { Object.assign(filters, values); applyFilters(); } });
 function copyWork(item) {
   if (item.prompt) copy(item.prompt, '提示词已复制');
   else copy(new URL(`#work/${encodeURIComponent(item.id)}`, location.href).href, '这条作品没有原始提示词，已复制作品链接');
@@ -37,7 +43,7 @@ startGlassMotion($('#gallery'));
 const detailTransition = createDetailTransition($('.work-layout'));
 function card(item) {
   const article = document.createElement('article'); article.className = 'work-card'; article.dataset.id = item.id;
-  article.innerHTML = `<div class="card-glass"><button class="card-open" data-open="${esc(item.id)}" aria-label="查看作品：${esc(item.title)}"><span class="card-media" style="--ratio:${item.width}/${item.height}"><span class="card-placeholder" aria-hidden="true"><span class="placeholder-mark">✧</span><span class="placeholder-title">${esc(item.title)}</span><span class="placeholder-lines"><i></i><i></i></span></span><img alt="${esc(item.title)}" width="${item.width}" height="${item.height}" decoding="async"><span class="card-error"><strong>封面暂未就绪</strong><span>可打开作品查看视频</span></span></span><span class="card-info"><span class="card-title">${esc(item.title)}</span><span class="card-description">${esc(summaryFor(item))}</span><span class="card-caption">${esc(item.source)} · ${esc(item.model)}</span></span></button><button class="card-copy" data-copy="${esc(item.id)}" aria-label="${item.prompt ? '复制提示词' : '复制作品链接'}：${esc(item.title)}" title="${item.prompt ? '复制提示词' : '复制作品链接'}">${copyIcon}</button></div>`;
+  article.innerHTML = `<div class="card-glass"><button class="card-open" data-open="${esc(item.id)}" aria-label="查看作品：${esc(item.title)}"><span class="card-media" style="--ratio:${item.width}/${item.height}"><span class="card-placeholder" aria-hidden="true"><span class="placeholder-mark">${icon("sparkle")}</span><span class="placeholder-title">${esc(item.title)}</span><span class="placeholder-lines"><i></i><i></i></span></span><img alt="${esc(item.title)}" width="${item.width}" height="${item.height}" decoding="async"><span class="card-error"><strong>封面暂未就绪</strong><span>可打开作品查看视频</span></span></span><span class="card-info"><span class="card-title">${esc(item.title)}</span><span class="card-description">${esc(summaryFor(item))}</span><span class="card-caption">${esc(item.source)} · ${esc(item.model)}</span></span></button><button class="card-copy" data-copy="${esc(item.id)}" aria-label="${item.prompt ? '复制提示词' : '复制作品链接'}：${esc(item.title)}" title="${item.prompt ? '复制提示词' : '复制作品链接'}">${copyIcon}</button></div>`;
   covers.observe(article, item);
   return article;
 }
@@ -58,6 +64,7 @@ function render(append = false) {
   $('#load-more-area').hidden = !filtered.length;
   $('#batch-status').textContent = `已呈现 ${Math.min(limit, filtered.length)} / ${filtered.length}`;
   $('#load-more').hidden = limit >= filtered.length;
+  filterUI.sync();
 }
 function applyFilters() { limit = 24; render(); }
 function resetFilters() { clearTimeout(searchTimer); Object.assign(filters, { kind: 'all', query: '', source: '', model: '', method: '', tag: '' }); $('#search').value = ''; ['source', 'model', 'method'].forEach(name => $(`#${name}-filter`).value = ''); applyFilters(); }
@@ -68,8 +75,6 @@ $('#gallery').addEventListener('click', event => {
 document.querySelectorAll('[data-kind]').forEach(button => button.addEventListener('click', () => { filters.kind = button.dataset.kind; applyFilters(); }));
 let searchTimer;
 $('#search').addEventListener('input', event => { const value = event.target.value; clearTimeout(searchTimer); searchTimer = setTimeout(() => { filters.query = value; applyFilters(); }, 250); });
-['source', 'model', 'method'].forEach(name => $(`#${name}-filter`).addEventListener('change', event => { filters[name] = event.target.value; applyFilters(); }));
-$('#tag-filters').addEventListener('click', event => { const button = event.target.closest('[data-tag]'); if (button) { filters.tag = filters.tag === button.dataset.tag ? '' : button.dataset.tag; applyFilters(); } });
 $('#reset-filters').addEventListener('click', resetFilters); $('#empty-reset').addEventListener('click', resetFilters);
 let appending = false, armed = true;
 function loadMore() {
@@ -116,7 +121,6 @@ function openWork(id, push = false) {
   current = item;
   const position = modalItems.findIndex(item => item.id === id);
   $('#work-position').textContent = `${String(position + 1).padStart(2, '0')} / ${String(modalItems.length).padStart(2, '0')}`;
-  $('#previous-work').disabled = position <= 0; $('#next-work').disabled = position >= modalItems.length - 1;
   $('#work-kind').textContent = titleForKind(item.kind);
   $('#work-title').textContent = item.title;
   $('#work-credit').textContent = [item.author, item.source].filter(Boolean).join(' · ');
@@ -160,7 +164,7 @@ function moveWork(offset) {
 }
 $('#close-work').addEventListener('click', () => closeWork());
 dialog.addEventListener('cancel', event => { event.preventDefault(); closeWork(); });
-$('#previous-work').addEventListener('click', () => moveWork(-1)); $('#next-work').addEventListener('click', () => moveWork(1));
+startWorkSwipe(dialog, moveWork);
 video.addEventListener('error', () => { if (current && video.hasAttribute('src')) $('#video-error').hidden = false; });
 $('#retry-video').addEventListener('click', async () => {
   if (!current) return;
@@ -181,7 +185,7 @@ async function copy(text, message) { try { await navigator.clipboard.writeText(t
 $('#copy-prompt').addEventListener('click', () => current?.prompt && copy(current.prompt, '提示词已复制'));
 $('#copy-negative').addEventListener('click', () => current?.negativePrompt && copy(current.negativePrompt, '负面提示词已复制'));
 $('#share-work').addEventListener('click', () => current && copy(new URL(`#work/${current.id}`, location.href).href, '作品链接已复制'));
-document.querySelectorAll('dialog').forEach(modal => modal.addEventListener('click', event => { if (event.target !== modal) return; const rect = modal.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) { if (modal === dialog) closeWork(); else modal.close(); } }));
+[dialog].forEach(modal => modal.addEventListener('click', event => { if (event.target !== modal) return; const rect = modal.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) { if (modal === dialog) closeWork(); else modal.close(); } }));
 document.addEventListener('keydown', event => {
   if (event.altKey || event.ctrlKey || event.metaKey || event.target.closest('input,textarea,select,[contenteditable=true]')) return;
   if (dialog.open && !event.target.closest('video')) { if (event.key === 'ArrowLeft') { event.preventDefault(); moveWork(-1); } if (event.key === 'ArrowRight') { event.preventDefault(); moveWork(1); } }

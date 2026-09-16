@@ -24,7 +24,10 @@ export function startIntro() {
   type(document.querySelector('#hero-title'), '光彩跃然', 200)();
   type(document.querySelector('#hero-poem'), '宛如^500一只蓝色蝴蝶^500扑闪着翅膀在无边海洋上空^500漫舞^500、求索。', 100)();
   reduced.addEventListener('change', event => { if (event.matches) writers.forEach(w => { w.instance?.destroy(); w.instance = null; w.output.innerHTML = w.html; }); });
-  const observer = new IntersectionObserver(([entry]) => document.querySelector('.site-header').classList.toggle('scrolled', !entry.isIntersecting), { rootMargin: '-110px 0px 0px 0px' });
+  const observer = new IntersectionObserver(([entry]) => {
+    document.querySelector('.site-header').classList.toggle('scrolled', !entry.isIntersecting);
+    document.documentElement.classList.toggle('in-gallery', !entry.isIntersecting);
+  }, { rootMargin: '-110px 0px 0px 0px' });
   observer.observe(document.querySelector('.hero'));
   window.addEventListener('pagehide', event => { if (!event.persisted) { observer.disconnect(); writers.forEach(w => w.instance?.destroy()); } });
 }

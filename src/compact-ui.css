@@ -1,0 +1,111 @@
+/* A single outline icon family across page controls. Video controls remain native. */
+.ui-icon { display: block; width: 20px; height: 20px; flex: 0 0 20px; }
+[data-icon] { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.theme-toggle .ui-icon, #close-work .ui-icon, #close-filters .ui-icon { width: 21px; height: 21px; }
+.theme-toggle { min-height: 40px; }
+.site-header:not(.scrolled) .theme-toggle { color: white; }
+.section-title button, .work-actions a, .work-actions button, .site-footer>div>a, .quiet-button { display: inline-flex; align-items: center; gap: 6px; }
+.section-title .ui-icon, .work-actions .ui-icon, .site-footer .ui-icon, .quiet-button .ui-icon { width: 16px; height: 16px; flex-basis: 16px; }
+.search-box>span { font-size: inherit; }
+.placeholder-mark .ui-icon { width: 28px; height: 28px; }
+.work-info summary { display: flex; align-items: center; gap: 6px; list-style: none; }
+.work-info summary::-webkit-details-marker { display: none; }
+.work-info details[open] summary .ui-icon { transform: rotate(180deg); }
+.load-more>span { display: inline-flex; vertical-align: middle; }
+
+/* Restore the saturated blue introduction; retain the calm dark archive. */
+:root:not(.in-gallery) .ocean-background { background-color: #051637; }
+:root:not(.in-gallery) .ocean-background[data-state=ready] canvas { opacity: 1; filter: none; }
+:root:not(.in-gallery) .ocean-veil { background: linear-gradient(180deg,#0410233b,transparent 50%,#04102335); }
+.ocean-background canvas { transition: opacity .5s, filter .5s; }
+
+.card-info { height: 116px; padding: 15px 11px 12px; }
+.card-title { font-size: 17px; line-height: 24px; height: 48px; margin-bottom: 7px; font-weight: 600; }
+.card-description { font-size: 13px; line-height: 20px; }
+.dialog-toolbar>div { align-items: center; }
+.swipe-hint { font-size: 11px; color: var(--glass-muted); }
+#close-work { display: grid; place-items: center; margin-left: 3px; width: 38px; height: 38px; }
+.work-media { touch-action: pan-y pinch-zoom; }
+.work-media video { touch-action: pan-y pinch-zoom; }
+.is-swiping, .is-swiping .work-media { cursor: grabbing; user-select: none; }
+@media (hover:hover) and (pointer:fine) { .work-media { cursor: grab; } }
+
+/* Search stays visible. Less frequent controls live in one complete filter sheet. */
+.filter-panel { padding-block: 14px 10px; }
+.filter-top { gap: 18px; }
+.search-actions { display: flex; align-items: stretch; gap: 8px; flex: 1; justify-content: flex-end; min-width: 0; }
+.search-box { max-width: 390px; min-width: 0; height: 42px; }
+.search-box input { min-width: 0; height: 40px; font-size: 14px; }
+.filter-trigger { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 0 15px; white-space: nowrap; font-size: 13px; }
+.filter-trigger, .filter-sheet-footer button, #close-filters {
+  border: 1px solid var(--glass-line); border-radius: 15px;
+  background: linear-gradient(135deg,#ffffff0f,#ffffff02),var(--glass-control);
+  color: var(--glass-ink); box-shadow: inset 0 1px 0 #ffffff30, 0 3px 9px #0001;
+}
+.filter-trigger.has-filters { border-color: #a9cbff99; }
+#filter-count { min-width: 18px; height: 18px; display: inline-grid; place-items: center; padding: 0 4px; border-radius: 12px; background: #426fbd; color: #fff; font-size: 10px; }
+.filter-summary { min-height: 24px; margin-top: 7px; display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--glass-muted); }
+.filter-summary .result-count { margin: 0; white-space: nowrap; font-size: 11px; }
+#active-filters { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#reset-filters { padding: 3px 0; margin-left: auto; flex-shrink: 0; }
+.filter-anchor { margin-bottom: 18px; }
+
+#filter-dialog {
+  width: min(520px,calc(100vw - 32px)); max-width: calc(100vw - 32px);
+  max-height: min(760px,calc(100dvh - 48px)); overflow: hidden;
+  padding: 0; border-radius: 24px; color: var(--glass-ink);
+  background: var(--glass-nav); border: 1px solid var(--glass-line);
+  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+  box-shadow: inset 0 1px 0 var(--glass-highlight),0 24px 80px #0006;
+}
+#filter-dialog[open] { display: flex; flex-direction: column; }
+#filter-dialog::backdrop { background: #0b101b77; backdrop-filter: blur(4px); }
+.filter-sheet-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; flex-shrink: 0; border-bottom: 1px solid var(--glass-line); }
+.filter-sheet-header h2 { margin: 0; font-size: 17px; font-weight: 600; }
+#close-filters { display: grid; place-items: center; border-radius: 50%; width: 36px; height: 36px; }
+.filter-sheet-body { padding: 20px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; min-height: 0; }
+#filter-dialog .select-filters { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px 12px; width: 100%; }
+#filter-dialog .select-filters label { display: flex; flex-direction: column; align-items: stretch; gap: 7px; font-size: 12px; min-width: 0; color: var(--glass-muted); }
+#filter-dialog .select-filters label:last-child { grid-column: 1/-1; }
+.select-wrap { position: relative; display: block; min-width: 0; }
+.select-wrap>[data-icon] { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+#filter-dialog select { appearance: none; -webkit-appearance: none; max-width: none; width: 100%; min-width: 0; height: 42px; padding: 0 34px 0 12px; font-size: 14px; text-overflow: ellipsis; }
+.filter-styles h3 { margin: 23px 0 12px; font-size: 12px; color: var(--glass-muted); font-weight: 500; }
+#filter-dialog .tag-filters { display: flex; flex-wrap: wrap; gap: 7px 6px; max-height: none; overflow: visible; padding: 1px; margin: 0; }
+#filter-dialog .tag-filters button { padding: 6px 11px; min-height: 32px; font-size: 12px; line-height: 18px; border-radius: 18px; }
+#filter-dialog .tag-filters button[aria-pressed=true] { color: var(--glass-ink); border-color: #8ebaff; background: #588bda30; }
+.filter-sheet-footer { display: flex; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--glass-line); flex-shrink: 0; }
+.filter-sheet-footer button { flex: 1; height: 42px; font-size: 14px; }
+#apply-filters { background: #426fae; border-color: #8bb8f370; color: #fff; }
+
+@media(max-width:779px) {
+  .card-info { height: 104px; padding: 12px 7px 10px; }
+  .card-title { font-size: 14px; line-height: 21px; height: 42px; margin-bottom: 6px; }
+  .card-description { font-size: 12px; line-height: 18px; }
+  .card-placeholder { padding: 8px; gap: 6px; }
+  .placeholder-mark .ui-icon { width: 20px; height: 20px; }
+  .placeholder-title { font-size: 11px; line-height: 16px; -webkit-line-clamp: 1; flex-shrink: 0; }
+  .placeholder-lines { display: none; }
+  .filter-panel { padding-block: 9px 6px; }
+  .filter-top { flex-direction: column; gap: 8px; }
+  .kind-tabs { gap: 6px; }
+  .kind-tabs button { padding: 7px 8px; min-height: 34px; font-size: 12px; border-radius: 15px; }
+  .kind-tabs button span { font-size: 10px; margin-left: 4px; }
+  .search-actions { width: 100%; gap: 7px; }
+  .search-box { max-width: none; height: 40px; padding-inline: 11px; gap: 7px; border-radius: 14px; }
+  .search-box input { height: 38px; font-size: 16px; }
+  .search-box input::placeholder { font-size: 13px; }
+  .search-box kbd { display: none; }
+  .filter-trigger { height: 40px; padding-inline: 11px; gap: 5px; font-size: 12px; border-radius: 14px; }
+  .filter-trigger .ui-icon { width: 18px; height: 18px; }
+  .filter-summary { min-height: 20px; margin-top: 5px; gap: 7px; font-size: 10px; }
+  .filter-summary .result-count, #reset-filters { font-size: 10px; }
+  #filter-dialog { margin: auto 0 0; width: 100%; max-width: 100%; max-height: min(78dvh,700px); border-radius: 23px 23px 0 0; border-bottom: 0; }
+  .filter-sheet-header { padding: 13px 18px; }
+  .filter-sheet-body { padding: 16px 18px; }
+  #filter-dialog select { font-size: 16px; }
+  #filter-dialog .tag-filters { gap: 7px 6px; }
+  .filter-sheet-footer { padding: 12px 18px max(14px,env(safe-area-inset-bottom)); }
+  .filter-sheet-footer button { height: 44px; }
+  .swipe-hint { font-size: 10px; }
+}
