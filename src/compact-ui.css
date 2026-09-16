@@ -1,3 +1,9 @@
+@font-face {
+  font-family: 'Gloria Title';
+  src: url('./assets/gloria-title.ttf') format('truetype');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+.hero h1 { font-family: 'Gloria Title', serif; }
 /* A single outline icon family across page controls. Video controls remain native. */
 .ui-icon { display: block; width: 20px; height: 20px; flex: 0 0 20px; }
 [data-icon] { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -19,8 +25,8 @@
 :root:not(.in-gallery) .ocean-veil { background: linear-gradient(180deg,#0410233b,transparent 50%,#04102335); }
 .ocean-background canvas { transition: opacity .5s, filter .5s; }
 
-.card-info { height: 116px; padding: 15px 11px 12px; }
-.card-title { font-size: 17px; line-height: 24px; height: 48px; margin-bottom: 7px; font-weight: 600; }
+.card-info { height: auto; padding: 10px 10px 8px; }
+.card-title { font-size: 17px; line-height: 23px; height: auto; margin-bottom: 4px; font-weight: 600; }
 .card-description { font-size: 13px; line-height: 20px; }
 .dialog-toolbar>div { align-items: center; }
 .swipe-hint { font-size: 11px; color: var(--glass-muted); }
@@ -34,7 +40,7 @@
 .filter-panel { padding-block: 14px 10px; }
 .filter-top { gap: 18px; }
 .search-actions { display: flex; align-items: stretch; gap: 8px; flex: 1; justify-content: flex-end; min-width: 0; }
-.search-box { max-width: 390px; min-width: 0; height: 42px; }
+.search-box { max-width: none; min-width: 0; height: 42px; }
 .search-box input { min-width: 0; height: 40px; font-size: 14px; }
 .filter-trigger { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 0 15px; white-space: nowrap; font-size: 13px; }
 .filter-trigger, .filter-sheet-footer button, #close-filters {
@@ -75,12 +81,14 @@
 #filter-dialog .tag-filters button { padding: 6px 11px; min-height: 32px; font-size: 12px; line-height: 18px; border-radius: 18px; }
 #filter-dialog .tag-filters button[aria-pressed=true] { color: var(--glass-ink); border-color: #8ebaff; background: #588bda30; }
 .filter-sheet-footer { display: flex; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--glass-line); flex-shrink: 0; }
-.filter-sheet-footer button { flex: 1; height: 42px; font-size: 14px; }
+.filter-sheet-footer button { height: 38px; font-size: 13px; }
+#reset-filter-draft { flex: 0 0 auto; padding-inline: 12px; background: none; border-color: transparent; box-shadow: none; color: var(--glass-muted); }
+#apply-filters { flex: 1; }
 #apply-filters { background: #426fae; border-color: #8bb8f370; color: #fff; }
 
 @media(max-width:779px) {
-  .card-info { height: 104px; padding: 12px 7px 10px; }
-  .card-title { font-size: 14px; line-height: 21px; height: 42px; margin-bottom: 6px; }
+  .card-info { height: auto; padding: 9px 7px 7px; }
+  .card-title { font-size: 14px; line-height: 21px; height: auto; margin-bottom: 3px; }
   .card-description { font-size: 12px; line-height: 18px; }
   .card-placeholder { padding: 8px; gap: 6px; }
   .placeholder-mark .ui-icon { width: 20px; height: 20px; }
@@ -108,4 +116,43 @@
   .filter-sheet-footer { padding: 12px 18px max(14px,env(safe-area-inset-bottom)); }
   .filter-sheet-footer button { height: 44px; }
   .swipe-hint { font-size: 10px; }
+}
+
+/* One search row; result metadata remains quiet and compact underneath. */
+.filter-panel { padding-block: 9px 5px; }
+.filter-top { gap: 0; }
+.search-actions { justify-content: stretch; }
+.search-box { flex: 1; }
+.filter-summary { min-height: 18px; margin-top: 4px; }
+#reset-filters { min-width: 0; width: auto; height: 24px; min-height: 0; padding: 2px 4px; font-size: 11px; line-height: 18px; border: 0; background: none; box-shadow: none; }
+#reset-filters .ui-icon { width: 12px; height: 12px; flex-basis: 12px; }
+.filter-kinds { margin-bottom: 18px; }
+.filter-kinds h3 { margin: 0 0 9px; color: var(--glass-muted); font-size: 12px; font-weight: 500; }
+#filter-dialog .kind-tabs { display: flex; gap: 6px; }
+#filter-dialog .kind-tabs button { flex: 1; min-height: 34px; padding: 7px 9px; font-size: 12px; white-space: nowrap; border-radius: 14px; }
+#filter-dialog .kind-tabs button span { font-size: 10px; margin-left: 4px; }
+/* All non-control detail content accepts horizontal gestures; vertical pans remain native. */
+#work-dialog, .work-layout, .work-info, .dialog-toolbar { touch-action: pan-y pinch-zoom; }
+.video-surface { position: relative; width: min(100%,var(--media-width)); flex-shrink: 0; }
+.video-surface video { width: 100%; }
+.video-gesture-surface { position: absolute; inset: 0 0 64px; touch-action: pan-y pinch-zoom; cursor: grab; }
+.is-swiping .video-gesture-surface { cursor: grabbing; }
+/* Tighten the information rhythm without shrinking readable text. */
+.work-info { padding: 20px 24px; }
+.work-info h2 { margin: 8px 0 6px; }
+.work-info #work-credit { margin-block: 6px; }
+.work-tags { margin-block: 12px; }
+.work-facts { margin-block: 16px; padding-block: 14px; }
+.section-title { margin-bottom: 10px; }
+.work-actions { margin-top: 16px; padding-top: 16px; }
+.archive-heading { margin-bottom: 26px; }
+@media(max-width:779px) {
+  .filter-panel { padding-block: 7px 4px; }
+  .filter-top { gap: 0; }
+  .filter-summary { min-height: 18px; margin-top: 3px; }
+  .filter-anchor { margin-bottom: 12px; }
+  .work-info { padding: 16px; }
+  .work-info h2 { font-size: 23px; }
+  .filter-sheet-footer button { height: 38px; }
+  .archive-heading { margin-bottom: 22px; }
 }

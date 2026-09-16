@@ -1,4 +1,5 @@
 const names = ['source', 'model', 'method', 'tag'];
+const kindLabels = { prompt: '有提示词', reference: '效果参考' };
 export function startCompactFilters({ getFilters, apply }) {
   const panel = document.querySelector('#filter-dialog');
   const trigger = document.querySelector('#open-filters');
@@ -8,13 +9,21 @@ export function startCompactFilters({ getFilters, apply }) {
   const showTags = () => tags.querySelectorAll('[data-tag]').forEach(button => {
     button.setAttribute('aria-pressed', String(button.dataset.tag === draft.tag));
   });
+  const showKinds = () => panel.querySelectorAll('[data-kind]').forEach(button => {
+    button.setAttribute('aria-pressed', String(button.dataset.kind === draft.kind));
+  });
+  panel.querySelector('.kind-tabs').addEventListener('click', event => {
+    const button = event.target.closest('[data-kind]');
+    if (button) { draft.kind = button.dataset.kind; showKinds(); }
+  });
   const close = () => {
     if (panel.open) panel.close();
     trigger.setAttribute('aria-expanded', 'false');
     trigger.focus({ preventScroll: true });
   };
   trigger.addEventListener('click', () => {
-    draft = Object.fromEntries(names.map(name => [name, getFilters()[name] || '']));
+    draft = { kind: getFilters().kind, ...Object.fromEntries(names.map(name => [name, getFilters()[name] || ''])) };
+    showKinds();
     for (const name of names.slice(0, 3)) document.querySelector(`#${name}-filter`).value = draft[name];
     showTags();
     panel.showModal();
@@ -30,7 +39,8 @@ export function startCompactFilters({ getFilters, apply }) {
   });
   document.querySelector('#apply-filters').addEventListener('click', () => { apply(draft); close(); });
   document.querySelector('#reset-filter-draft').addEventListener('click', () => {
-    draft = Object.fromEntries(names.map(name => [name, '']));
+    draft = { kind: 'all', ...Object.fromEntries(names.map(name => [name, ''])) };
+    showKinds();
     for (const name of names.slice(0, 3)) document.querySelector(`#${name}-filter`).value = '';
     showTags();
   });
@@ -43,7 +53,7 @@ export function startCompactFilters({ getFilters, apply }) {
   });
   return { sync() {
     const filters = getFilters();
-    const chosen = names.map(name => filters[name]).filter(Boolean);
+    const chosen = [kindLabels[filters.kind], ...names.map(name => filters[name])].filter(Boolean);
     badge.textContent = chosen.length;
     badge.hidden = !chosen.length;
     trigger.classList.toggle('has-filters', !!chosen.length);

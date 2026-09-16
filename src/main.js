@@ -17,15 +17,11 @@ mountIcons();
 const $ = selector => document.querySelector(selector);
 const base = import.meta.env.BASE_URL;
 const mediaURL = path => { if (!path) return ''; if (/^https:\/\//.test(path)) return safeURL(path) || ''; return new URL(base + path, location.href.split('#')[0]).href; };
-const storage = { get(key) { try { return localStorage.getItem(key); } catch { return null; } }, set(key, value) { try { localStorage.setItem(key, value); return true; } catch { return false; } } };
 let items = [], filtered = [], limit = 24, current = null, modalItems = [], lastFocus, toastTimer;
 const filters = { kind: 'all', query: '', source: '', model: '', method: '', tag: '' };
 const dialog = $('#work-dialog'), video = $('#work-video');
 const titleForKind = kind => kind === 'prompt' ? '有提示词' : '效果参考';
 function toast(message) { $('#toast').textContent = message; $('#toast').classList.add('visible'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('#toast').classList.remove('visible'), 2600); }
-function setTheme(theme) { document.documentElement.dataset.theme = theme; const light = theme === 'light'; $('#theme-toggle').setAttribute('aria-label', `切换为${light ? '深' : '浅'}色主题`); $('.theme-label').textContent = light ? '深色' : '浅色'; $('.theme-icon').innerHTML = icon(light ? 'moon' : 'sun'); }
-setTheme(storage.get('gloria-theme') === 'light' ? 'light' : 'dark');
-$('#theme-toggle').addEventListener('click', () => { const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; setTheme(theme); storage.set('gloria-theme', theme); });
 startIntro();
 import('./background.js').then(({ startBackground }) => startBackground()).catch(() => { $('.ocean-background').dataset.state = 'fallback'; });
 $('#site-version').textContent = `V${version}`;
@@ -56,8 +52,6 @@ function render(append = false) {
   filtered.slice(before, limit).forEach((item, i) => fragment.append(card(item, before + i)));
   gallery.append(fragment);
   masonry.layout();
-  document.querySelectorAll('[data-kind]').forEach(button => button.setAttribute('aria-pressed', button.dataset.kind === filters.kind));
-  document.querySelectorAll('[data-tag]').forEach(button => button.setAttribute('aria-pressed', button.dataset.tag === filters.tag));
   $('#empty-state').hidden = !!filtered.length || !items.length;
   $('#result-count').textContent = `${filtered.length} 个作品`;
   $('#reset-filters').hidden = filters.kind === 'all' && !Object.entries(filters).some(([name, value]) => name !== 'kind' && value);
@@ -72,7 +66,6 @@ $('#gallery').addEventListener('click', event => {
   const button = event.target.closest('[data-copy]'); if (button) { const item = items.find(item => item.id === button.dataset.copy); if (item) copyWork(item); return; }
   const open = event.target.closest('[data-open]'); if (open) openWork(open.dataset.open, true);
 });
-document.querySelectorAll('[data-kind]').forEach(button => button.addEventListener('click', () => { filters.kind = button.dataset.kind; applyFilters(); }));
 let searchTimer;
 $('#search').addEventListener('input', event => { const value = event.target.value; clearTimeout(searchTimer); searchTimer = setTimeout(() => { filters.query = value; applyFilters(); }, 250); });
 $('#reset-filters').addEventListener('click', resetFilters); $('#empty-reset').addEventListener('click', resetFilters);
@@ -165,6 +158,12 @@ function moveWork(offset) {
 $('#close-work').addEventListener('click', () => closeWork());
 dialog.addEventListener('cancel', event => { event.preventDefault(); closeWork(); });
 startWorkSwipe(dialog, moveWork);
+// The surface receives gestures above native controls, which can swallow pointer events.
+$('.video-gesture-surface').addEventListener('click', () => {
+  if (!current || !video.hasAttribute('src')) return;
+  if (video.paused) video.play().catch(() => toast('暂时无法播放，请使用播放器重试'));
+  else video.pause();
+});
 video.addEventListener('error', () => { if (current && video.hasAttribute('src')) $('#video-error').hidden = false; });
 $('#retry-video').addEventListener('click', async () => {
   if (!current) return;
@@ -201,7 +200,7 @@ async function loadCatalog() {
     items = catalog.items.map(item => ({ ...item, width: item.width || 4, height: item.height || 3 }));
     const prompts = items.filter(item => item.prompt).length;
     $('#total-count').textContent = items.length;
-    $('#hero-count').textContent = `${items.length} 个作品 · ${prompts} 条提示词 · ${items.length - prompts} 个效果参考`;
+    $('#hero-count').textContent = `${items.length} 个作品 · ${prompts} 条提示词`;
     $('#updated-at').textContent = `最近收录同步 ${new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(catalog.updatedAt))}`;
     $('[data-kind="all"] span').textContent = items.length; $('[data-kind="prompt"] span').textContent = prompts; $('[data-kind="reference"] span').textContent = items.length - prompts;
     ['source', 'model', 'method'].forEach(name => { const select = $(`#${name}-filter`); select.querySelectorAll('option:not(:first-child)').forEach(option => option.remove()); [...new Set([...(catalog.options?.[name] || []), ...items.map(item => item[name])])].filter(Boolean).forEach(value => select.add(new Option(value, value))); });

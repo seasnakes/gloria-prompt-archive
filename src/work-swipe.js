@@ -8,13 +8,13 @@ export function startWorkSwipe(dialog, move) {
   const clear = () => { start = null; dragging = false; dialog.classList.remove('is-swiping'); };
   dialog.addEventListener('pointerdown', event => {
     if (!dialog.open || !event.isPrimary || event.button !== 0) return;
-    if (!event.target.closest('.work-media, .dialog-toolbar')) return;
-    if (event.target.closest('button,a,input,select')) return;
+    if (event.target === dialog) return;
+    if (event.target.closest('button,a,input,select,textarea,summary,[contenteditable=true]')) return;
     // Leave the native play button, timeline and fullscreen controls alone.
     const video = event.target.closest('video');
     if (video && event.clientY > video.getBoundingClientRect().bottom - 64) return;
     start = { id: event.pointerId, x: event.clientX, y: event.clientY, time: performance.now() };
-  }, { passive: true });
+  }, { passive: true, capture: true });
   dialog.addEventListener('pointermove', event => {
     if (!start || event.pointerId !== start.id) return;
     const dx = event.clientX - start.x, dy = event.clientY - start.y;
@@ -45,5 +45,25 @@ export function startWorkSwipe(dialog, move) {
     // dialog emits a bubbling loss from the video; the drag is still active.
     if (event.target === dialog) clear();
   });
-  dialog.addEventListener('close', clear);
+  // Trackpads emit wheel events, not pointer drags. Consume only an intentional
+  // horizontal gesture and keep its inertia from advancing several works.
+  let wheelTotal = 0, wheelSign = 0, wheelLocked = false, wheelTimer;
+  const resetWheel = () => { wheelTotal = 0; wheelSign = 0; wheelLocked = false; };
+  dialog.addEventListener('wheel', event => {
+    if (!dialog.open || event.ctrlKey || event.target === dialog) return;
+    if (event.target.closest('button,a,input,select,textarea,summary,[contenteditable=true]')) return;
+    if (Math.abs(event.deltaX) < Math.abs(event.deltaY) * 1.6 || !event.deltaX) return;
+    const video = event.target.closest('video');
+    if (video && event.clientY > video.getBoundingClientRect().bottom - 64) return;
+    if (event.cancelable) event.preventDefault();
+    clearTimeout(wheelTimer);
+    wheelTimer = setTimeout(resetWheel, 280);
+    if (wheelLocked) return;
+    const sign = Math.sign(event.deltaX);
+    if (sign !== wheelSign) wheelTotal = 0;
+    wheelSign = sign;
+    wheelTotal += Math.abs(event.deltaX) * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? dialog.clientWidth : 1);
+    if (wheelTotal >= 80) { wheelLocked = true; move(sign); }
+  }, { passive: false });
+  dialog.addEventListener('close', () => { clear(); clearTimeout(wheelTimer); resetWheel(); });
 }
