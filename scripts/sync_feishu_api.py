@@ -49,7 +49,7 @@ def request(path, token=None, params=None, body=None, gate=None):
         except HTTPError as error:
             try:
                 detail = json.loads(error.read(65536))
-            except (ValueError, OSError):
+            except (ValueError, OSError, KeyError, AttributeError):
                 detail = {}
             code = detail.get('code')
             if error.code == 429 or error.code >= 500 or code in (99991400, 99991401):
