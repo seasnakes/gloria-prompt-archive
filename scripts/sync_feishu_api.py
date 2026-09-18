@@ -47,9 +47,19 @@ def request(path, token=None, params=None, body=None, gate=None):
             with urlopen(req, timeout=35) as response:
                 result = json.load(response)
         except HTTPError as error:
-            if error.code == 429 or error.code >= 500:
-                time.sleep(2 ** attempt); continue
-            raise RuntimeError(f'Feishu HTTP {error.code}; check application read permissions and Base access') from None
+            try:
+                detail = json.loads(error.read(65536))
+            except (ValueError, OSError):
+                detail = {}
+            code = detail.get('code')
+            if error.code == 429 or error.code >= 500 or code in (99991400, 99991401):
+                retry_after = error.headers.get('Retry-After', '') if error.headers else ''
+                delay = float(retry_after) if retry_after.isdigit() else 2 ** attempt
+                time.sleep(min(delay, 60)); continue
+            # Log only numeric codes and request IDs, never request URLs or response bodies.
+            request_id = error.headers.get('X-Tt-Logid', '') if error.headers else ''
+            request_id = re.sub(r'[^a-zA-Z0-9_-]', '', request_id)[:100]
+            raise RuntimeError(f'Feishu HTTP {error.code}; API code {code}; operation {path.split("/")[0]}; request ID {request_id or "unavailable"}') from None
         except (URLError, TimeoutError):
             if attempt == 3: raise RuntimeError('Feishu connection failed; previous deployment retained') from None
             time.sleep(2 ** attempt); continue

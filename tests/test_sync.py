@@ -64,6 +64,22 @@ class MediaRefreshTests(unittest.TestCase):
                 gate.wait(); starts.append(now[0])
         self.assertEqual(starts, [10, 10.25, 10.5, 10.75, 11])
 
+    def test_http_400_reports_code_without_sensitive_response(self):
+        import io
+        from urllib.error import HTTPError
+        error = HTTPError('https://example.com/private-token', 400, 'bad', {'X-Tt-Logid': 'request123'}, io.BytesIO(b'{"code":1061002,"msg":"private-token"}'))
+        with patch.object(sync, 'urlopen', side_effect=error):
+            with self.assertRaisesRegex(RuntimeError, 'API code 1061002.*request123') as caught:
+                sync.request('drive/test', 'secret')
+        self.assertNotIn('private-token', str(caught.exception))
+
+    def test_http_400_business_rate_limit_retries(self):
+        import io
+        from urllib.error import HTTPError
+        error = HTTPError('https://example.com', 400, 'bad', {}, io.BytesIO(b'{"code":99991400}'))
+        with patch.object(sync, 'urlopen', side_effect=[error, io.BytesIO(b'{"code":0}')]), patch.object(sync.time, 'sleep'):
+            self.assertEqual(sync.request('drive/test'), {'code': 0})
+
     def test_retry_also_uses_shared_gate(self):
         import io
         from urllib.error import HTTPError
