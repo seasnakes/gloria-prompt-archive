@@ -24,4 +24,54 @@ class SyncTests(unittest.TestCase):
         self.assertEqual(sync.dimensions(''), (4, 3, False))
         self.assertIsNone(sync.public_url('https://my.feishu.cn/base/private'))
         self.assertIsNone(sync.public_url('javascript:alert(1)'))
+
+class MediaRefreshTests(unittest.TestCase):
+    def test_concurrent_batches_deduplicate_and_keep_complete_results(self):
+        import threading
+        barrier = threading.Barrier(4)
+        lock = threading.Lock()
+        active, peak, calls = [0], [0], []
+        def fake_request(path, token, params, gate):
+            batch = params['file_tokens']
+            with lock:
+                active[0] += 1
+                peak[0] = max(peak[0], active[0])
+                calls.append(batch)
+            if int(batch[0]) < 20:
+                barrier.wait(timeout=5)
+            with lock:
+                active[0] -= 1
+            return {'data': {'tmp_download_urls': [{'file_token': t, 'tmp_download_url': 'https://example.com/' + t} for t in reversed(batch)]}}
+        with patch.object(sync, 'request', side_effect=fake_request):
+            result = sync.refresh_media_urls([str(i) for i in range(23)] + ['0'], 'secret')
+        self.assertEqual(len(result), 23)
+        self.assertEqual(peak[0], 4)
+        self.assertEqual(sorted(map(len, calls)), [3, 5, 5, 5, 5])
+        self.assertEqual(result['22'], 'https://example.com/22')
+
+    def test_missing_or_invalid_link_blocks_publication(self):
+        with patch.object(sync, 'request', return_value={'data': {'tmp_download_urls': [{'file_token': 'a', 'tmp_download_url': 'http://example.com/a'}]}}):
+            with self.assertRaisesRegex(RuntimeError, 'Missing media URL'):
+                sync.refresh_media_urls(['a', 'b'], 'secret')
+
+    def test_shared_gate_spaces_request_starts(self):
+        now = [10.0]
+        def sleep(delay): now[0] += delay
+        with patch.object(sync.time, 'monotonic', side_effect=lambda: now[0]), patch.object(sync.time, 'sleep', side_effect=sleep):
+            gate = sync.RateGate()
+            starts = []
+            for _ in range(5):
+                gate.wait(); starts.append(now[0])
+        self.assertEqual(starts, [10, 10.25, 10.5, 10.75, 11])
+
+    def test_retry_also_uses_shared_gate(self):
+        import io
+        from urllib.error import HTTPError
+        from unittest.mock import Mock
+        gate = Mock()
+        response = io.BytesIO(b'{"code":0,"data":{}}')
+        with patch.object(sync, 'urlopen', side_effect=[HTTPError('https://example.com', 429, 'limited', {}, None), response]), patch.object(sync.time, 'sleep'):
+            self.assertEqual(sync.request('drive/test', 'secret', gate=gate), {'code': 0, 'data': {}})
+        self.assertEqual(gate.wait.call_count, 2)
+
 if __name__ == '__main__': unittest.main()

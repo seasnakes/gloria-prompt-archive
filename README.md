@@ -41,7 +41,7 @@ npm run preview
 
 Actions 使用仓库 Secrets：`LARK_APP_ID`、`LARK_APP_SECRET`、`LARK_BASE_TOKEN`、`LARK_TABLE_ID`。飞书应用需有 `bitable:app:readonly` 权限及目标表的读取权限。密钥仅进入 Actions 后端，不进入浏览器或构建产物。
 
-`npm run sync:api` 分页读取全部记录和完整字段选项，批量换取附件临时链接。只发布展示字段及媒体链接，不下载视频或图片。生成的 JSON 只随 Pages 构建产物发布，不提交回仓库；远程模式构建自动排除旧的 `public/media/` 静态附件。
+`npm run sync:api` 分页读取全部记录和完整字段选项，以四个并发请求批量换取附件临时链接，每批最多五个附件、所有线程及重试合计每秒最多发起四次请求；日志每完成 100 批显示进度。只发布展示字段及媒体链接，不下载视频或图片。生成的 JSON 只随 Pages 构建产物发布，不提交回仓库；远程模式构建自动排除旧的 `public/media/` 静态附件。
 
 附件临时链接有效期约 24 小时；定时刷新减少过期影响，但 GitHub 定时任务可能延迟。可在 Actions 中手动运行 **Publish GitHub Pages** 刷新。大库逐批获取附件链接可能超过 20 分钟，任务最长允许 90 分钟。同步缺页、权限错误或附件链接不完整时停止部署，保留此前成功版本；连续失败超过链接有效期会影响媒体播放。
 

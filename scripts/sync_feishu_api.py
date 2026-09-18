@@ -7,6 +7,8 @@ from pathlib import Path
 import re
 import sys
 import time
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone, timedelta
 from urllib.parse import urlencode, urlparse
 from urllib.request import Request, urlopen
@@ -17,12 +19,29 @@ API = 'https://open.feishu.cn/open-apis/'
 BASE = os.environ.get('LARK_BASE_TOKEN', 'Fiqwbq0xeahG6RsvP3TcCJgQnNf')
 TABLE = os.environ.get('LARK_TABLE_ID', 'tbl5wfUVflIsVTvv')
 
-def request(path, token=None, params=None, body=None):
+class RateGate:
+    """Share request-start pacing across workers and retries."""
+    def __init__(self, interval=.25):
+        self.interval = interval
+        self.next_start = 0
+        self.lock = threading.Lock()
+
+    def wait(self):
+        with self.lock:
+            delay = self.next_start - time.monotonic()
+            if delay > 0:
+                time.sleep(delay)
+            self.next_start = time.monotonic() + self.interval
+
+
+def request(path, token=None, params=None, body=None, gate=None):
     url = API + path + ('?' + urlencode(params, doseq=True) if params else '')
     headers = {'Content-Type': 'application/json'}
     if token:
         headers['Authorization'] = 'Bearer ' + token
     for attempt in range(4):
+        if gate is not None:
+            gate.wait()
         req = Request(url, data=json.dumps(body).encode() if body is not None else None, headers=headers)
         try:
             with urlopen(req, timeout=35) as response:
@@ -118,6 +137,34 @@ def build_catalog(records, urls, fields):
     now = datetime.now(timezone.utc)
     return {'schemaVersion': 1, 'updatedAt': now.isoformat(), 'mediaExpiresAt': (now + timedelta(hours=24)).isoformat(), 'mediaMode': 'feishu-links', 'count': len(output), 'items': output, 'options': choices}
 
+def refresh_media_urls(tokens, token):
+    tokens = list(dict.fromkeys(tokens))
+    batches = [tokens[start:start + 5] for start in range(0, len(tokens), 5)]
+    gate = RateGate()  # Four starts/second, below the documented five QPS cap.
+    started = time.monotonic()
+
+    def fetch(batch):
+        data = request('drive/v1/medias/batch_get_tmp_download_url', token,
+                       params={'file_tokens': batch, 'extra': json.dumps({'bitablePerm': {'tableId': TABLE}})},
+                       gate=gate)['data']
+        urls = {item['file_token']: item['tmp_download_url']
+                for item in data.get('tmp_download_urls', [])
+                if item.get('file_token') in batch and isinstance(item.get('tmp_download_url'), str)
+                and item['tmp_download_url'].startswith('https://')}
+        if any(t not in urls for t in batch):
+            raise RuntimeError('Missing media URL; previous deployment retained')
+        return urls
+
+    urls = {}
+    print(f'Refreshing {len(tokens)} media links in {len(batches)} batches; four workers, at most four requests/second.', flush=True)
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        for completed, result in enumerate(pool.map(fetch, batches), 1):
+            urls.update(result)
+            if completed % 100 == 0 or completed == len(batches):
+                print(f'Media batches {completed}/{len(batches)}; elapsed {time.monotonic() - started:.0f}s.', flush=True)
+    return urls
+
+
 def main():
     app_id, secret = os.environ.get('LARK_APP_ID'), os.environ.get('LARK_APP_SECRET')
     if not app_id or not secret: raise RuntimeError('Missing LARK_APP_ID / LARK_APP_SECRET')
@@ -127,15 +174,7 @@ def main():
     records = pages(prefix + '/records', token)
     if not records: raise RuntimeError('Refusing to replace the gallery with an empty result')
     tokens = list(dict.fromkeys(a['file_token'] for r in records for name in ['封面', '对应视频', '参考图'] for a in r.get('fields', {}).get(name, []) if isinstance(a, dict) and a.get('file_token')))
-    urls = {}
-    for start in range(0, len(tokens), 5):
-        batch = tokens[start:start + 5]
-        data = request('drive/v1/medias/batch_get_tmp_download_url', token, params={'file_tokens': batch, 'extra': json.dumps({'bitablePerm': {'tableId': TABLE}})})['data']
-        for item in data.get('tmp_download_urls', []):
-            url = item.get('tmp_download_url', '')
-            if url.startswith('https://'): urls[item['file_token']] = url
-        if any(t not in urls for t in batch): raise RuntimeError('Missing media URL; previous deployment retained')
-        time.sleep(.22)
+    urls = refresh_media_urls(tokens, token)
     catalog = build_catalog(records, urls, fields)
     out = ROOT / 'public/data/catalog.json'
     temp = out.with_suffix('.tmp')
