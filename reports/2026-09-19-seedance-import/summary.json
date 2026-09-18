@@ -1,0 +1,14 @@
+{
+  "date": "2026-09-19",
+  "source_snapshot_entries": 6399,
+  "initial_import_records": 6013,
+  "initial_attachment_records": 20,
+  "supplemented_verified_records": 5924,
+  "removed_failed_records": 69,
+  "retained_seedance_records": 5944,
+  "final_library_records": 6779,
+  "supplement_attachment_bytes": 36793721977,
+  "supplement_video_files": 6084,
+  "final_readback_passed": true,
+  "retained_records_unchanged": true
+}
