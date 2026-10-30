@@ -64,7 +64,7 @@ npm run preview    # http://127.0.0.1:5183/ ，看实际构建结果
 
 ## Bilibili Toy 自动更新
 
-`Build and preview Bilibili Toy`（`.github/workflows/toy-publish.yml`）在正式分支的 `Publish GitHub Pages` 成功后运行，复用该次构建的完整目录，不重复读取飞书。流程会构建自带 `data/catalog.json` 的 Toy 包，并通过官方内容检查。图片和视频仍使用飞书临时链接；点赞服务独立运行。
+`Publish Bilibili Toy`（`.github/workflows/toy-publish.yml`）在正式分支的 `Publish GitHub Pages` 成功后运行，复用该次构建的完整目录，不重复读取飞书。流程会构建自带 `data/catalog.json` 的 Toy 包，并通过官方内容检查。图片和视频仍使用飞书临时链接；点赞服务独立运行。
 
 - 包和检查报告在 `.local/toy/gloria-toy.zip`、`.local/toy/package-report.json`，报告记录作品数、目录时间、媒体有效期和 SHA-256。校验入口、私有字段、重复编号及 50 MB 包体预算；媒体链接剩余不足 8 小时则停止，保留已发布版本。
 - 使用 GitHub 的 `bilibili-toy` 环境。创作者会话只存加密 secret `TOY_SESSION_TOKEN`，不进入源码、网页、日志或附件。失效时通过官方 `toy login` 重新授权后更新 secret。

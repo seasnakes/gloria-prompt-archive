@@ -1,4 +1,4 @@
-name: Build and preview Bilibili Toy
+name: Publish Bilibili Toy
 on:
   workflow_run:
     workflows: [Publish GitHub Pages]
